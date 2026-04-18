@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NFA to DFA Converter | Himanshu Choudhary</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ========== EXPLAIN MODAL ========== -->
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="modal-title">⟡ SUBSET CONSTRUCTION ALGORITHM</div>
+      <button class="modal-x" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="algo-step">
+        <div class="algo-num">1</div>
+        <div class="algo-content">
+          <h4>INITIALIZE</h4>
+          <p>Compute <code>ε-closure({start})</code>. This set of NFA states becomes the
+             first DFA state. Add it to the work queue.</p>
+        </div>
+      </div>
+      <div class="algo-step">
+        <div class="algo-num">2</div>
+        <div class="algo-content">
+          <h4>EXPAND (loop until queue empty)</h4>
+          <p>For each unprocessed DFA state <code>S</code> and each symbol <code>σ</code>:<br>
+             a) <code>move(S,σ)</code> = NFA states reachable on σ<br>
+             b) <code>ε-closure(move(S,σ))</code> = target DFA state<br>
+             c) Record transition <code>S →[σ]→ target</code><br>
+             d) If target is new, enqueue it</p>
+        </div>
+      </div>
+      <div class="algo-step">
+        <div class="algo-num">3</div>
+        <div class="algo-content">
+          <h4>ACCEPT STATES</h4>
+          <p>A DFA state is accepting if it contains <em>any</em> NFA accepting state in
+             its subset. The DFA accepts exactly the same language as the NFA.</p>
+        </div>
+      </div>
+      <div class="algo-step">
+        <div class="algo-num">4</div>
+        <div class="algo-content">
+          <h4>DEAD STATE <code>{∅}</code></h4>
+          <p>If no NFA states are reachable the result is <code>{}</code> — the dead/trap
+             state. All transitions from it loop back. No string is accepted from there.</p>
+        </div>
+      </div>
+      <div class="algo-step">
+        <div class="algo-num">ε</div>
+        <div class="algo-content">
+          <h4>EPSILON CLOSURE</h4>
+          <p><code>ε-closure(S)</code> is all NFA states reachable from S using only
+             ε-transitions (no input consumed). Computed by BFS/DFS from every state in S.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- /modal -->
+
+<div class="wrap">
+
+  <!-- =================== HEADER =================== -->
+  <header>
+    <div class="logo-badge">AUTOMATA</div>
+    <div class="logo-text" style="margin-left:4px;">
+      <h1>NFA <span class="ga">&#x2192;</span> DFA <span class="gb">Converter</span></h1>
+      <div class="sub">SUBSET CONSTRUCTION METHOD &nbsp;&middot;&nbsp; INTERACTIVE VISUALIZER</div>
+    </div>
+    <div class="kb-strip">
+      <div class="kb-item"><span class="kb">↵</span>Convert</div>
+      <div class="kb-item"><span class="kb">←</span><span class="kb">→</span>Step</div>
+      <div class="kb-item"><span class="kb">Space</span>Play</div>
+      <div class="kb-item"><span class="kb">R</span>Reset</div>
+    </div>
+    <div class="student-badge">
+      <div class="sname">Himanshu Choudhary</div>
+      <div class="sroll">&#x25CF; ROLL NO: 2024UCS1604</div>
+      <div class="ssub">Theory of Automata &amp; Formal Languages</div>
+    </div>
+  </header>
+
+  <!-- =================== MAIN GRID =================== -->
+  <div class="grid">
+
+    <!-- =========== LEFT COLUMN =========== -->
+    <div class="left-col">
+
+      <!-- INPUT PANEL -->
+      <div class="panel">
+        <div class="ph">
+          <div class="dot dg"></div>
+          <div class="ph-title">NFA Definition</div>
+          <div class="ph-tag" style="background:rgba(93,255,170,.08);color:var(--g);">INPUT</div>
+        </div>
+        <div class="pb">
+          <div style="font-size:8px;color:var(--dim);letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px;">
+            Quick Presets
+          </div>
+          <div class="presets">
+            <button class="pbtn" id="pb-ab"     onclick="loadPreset('ab')">ends-with-ab</button>
+            <button class="pbtn" id="pb-eps"    onclick="loadPreset('eps')">&#x03B5;-NFA</button>
+            <button class="pbtn" id="pb-binary" onclick="loadPreset('binary')">binary &#xF7;3</button>
+            <button class="pbtn" id="pb-union"  onclick="loadPreset('union')">a* &#x222A; b*</button>
+            <button class="pbtn" id="pb-aabb"   onclick="loadPreset('aabb')">aabb*</button>
+            <button class="pbtn" id="pb-mod3"   onclick="loadPreset('mod3')">mod-3</button>
+            <button class="pbtn" id="pb-all0"   onclick="loadPreset('all0')">all-0s</button>
+          </div>
+
+          <div class="fg">
+            <label>States (comma-separated)</label>
+            <input id="inp-states" value="q0, q1, q2" placeholder="q0, q1, q2">
+          </div>
+          <div class="fg">
+            <label>Alphabet (comma-separated)</label>
+            <input id="inp-alpha" value="a, b" placeholder="a, b">
+            <div class="hint">Use <code>&#x03B5;</code> or <code>eps</code> for epsilon transitions</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div class="fg">
+              <label>Start State</label>
+              <input id="inp-start" value="q0" placeholder="q0">
+            </div>
+            <div class="fg">
+              <label>Accept States</label>
+              <input id="inp-accept" value="q2" placeholder="q2">
+            </div>
+          </div>
+          <div class="fg">
+            <label>Transitions &mdash; one per line</label>
+            <textarea id="inp-trans" rows="7">q0,a &#x2192; q0 q1
+q0,b &#x2192; q0
+q1,b &#x2192; q2</textarea>
+            <div class="hint">
+              Format: <code>state,symbol &#x2192; dest1 dest2</code><br>
+              Multiple destinations = nondeterminism &nbsp;&middot;&nbsp; Use <code>&#x03B5;</code> for epsilon
+            </div>
+          </div>
+
+          <div id="err-box"></div>
+
+          <button class="btn btn-go" onclick="doConvert()">&#x26A1;&nbsp; CONVERT NFA &#x2192; DFA</button>
+          <div class="btn-row">
+            <button class="btn btn-sm" onclick="doReset()">&#x21BA; Reset</button>
+            <button class="btn btn-sm" onclick="doStep()">&#x25B6; Step Mode</button>
+            <button class="btn btn-sm" onclick="openModal()">? Algorithm</button>
+          </div>
+        </div>
+      </div>
+      <!-- /input panel -->
+
+      <!-- STRING TESTER -->
+      <div class="panel" id="tester-panel" style="display:none;">
+        <div class="ph">
+          <div class="dot dv"></div>
+          <div class="ph-title">String Tester</div>
+          <div class="ph-tag" style="background:rgba(192,92,255,.08);color:var(--g5);">DFA SIMULATE</div>
+        </div>
+        <div class="pb">
+          <div class="fg" style="margin-bottom:6px;">
+            <label>Input String (empty = &#x03B5;)</label>
+            <input id="test-str" placeholder="e.g.  aab" oninput="testString()">
+          </div>
+          <div class="tape-wrap" id="tape-wrap" style="display:none;">
+            <div class="tape" id="tape"></div>
+          </div>
+          <div id="test-result"></div>
+        </div>
+      </div>
+      <!-- /string tester -->
+
+      <!-- SUMMARY -->
+      <div class="panel" id="info-panel" style="display:none;">
+        <div class="ph">
+          <div class="dot db"></div>
+          <div class="ph-title">Conversion Summary</div>
+        </div>
+        <div class="pb" id="info-body"></div>
+      </div>
+      <!-- /summary -->
+
+    </div>
+    <!-- /left-col -->
+
+    <!-- =========== RIGHT COLUMN =========== -->
+    <div class="right-col">
+
+      <!-- GRAPH PANEL -->
+      <div class="panel">
+        <div class="ph">
+          <div class="dot db"></div>
+          <div class="ph-title">Automata Graphs</div>
+          <div class="ph-tag" style="background:rgba(92,184,255,.08);color:var(--g3);">SVG RENDER</div>
+        </div>
+        <div class="tabs" id="gtabs">
+          <div class="tab on" onclick="gTab('nfa',  this)">NFA</div>
+          <div class="tab"    onclick="gTab('dfa',  this)">DFA</div>
+          <div class="tab"    onclick="gTab('both', this)">Side by Side</div>
+        </div>
+        <div style="padding:12px;">
+          <div class="tbdy on" id="g-nfa">
+            <div class="gcanvas" id="gc-nfa">
+              <div class="empty">
+                <div class="ei">&#x223F;</div>
+                <div class="et">DEFINE NFA AND CLICK CONVERT</div>
+              </div>
+            </div>
+          </div>
+          <div class="tbdy" id="g-dfa">
+            <div class="gcanvas" id="gc-dfa">
+              <div class="empty">
+                <div class="ei">&#x21C9;</div>
+                <div class="et">DFA WILL APPEAR AFTER CONVERSION</div>
+              </div>
+            </div>
+          </div>
+          <div class="tbdy" id="g-both">
+            <div class="two-up">
+              <div>
+                <div class="glabel" style="color:var(--g3);">&#x25C8; NFA</div>
+                <div class="gcanvas" id="gc-nfa2" style="min-height:220px;">
+                  <div class="empty" style="min-height:220px;">
+                    <div class="ei" style="font-size:28px;">&#x223F;</div>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div class="glabel" style="color:var(--g);">&#x25C8; DFA</div>
+                <div class="gcanvas" id="gc-dfa2" style="min-height:220px;">
+                  <div class="empty" style="min-height:220px;">
+                    <div class="ei" style="font-size:28px;">&#x21C9;</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="legend">
+          <div class="li"><div class="lc" style="border-color:var(--g3)"></div>Regular</div>
+          <div class="li"><div class="lc" style="border-color:var(--g)"></div>Start</div>
+          <div class="li"><div class="lc" style="border-color:var(--g2)"></div>Accept</div>
+          <div class="li"><div class="lc" style="border-color:var(--g4)"></div>Start+Accept</div>
+          <div class="li"><div class="lc" style="border-color:var(--dim2)"></div>Dead &empty;</div>
+        </div>
+      </div>
+      <!-- /graph panel -->
+
+      <!-- TABLES PANEL -->
+      <div class="panel">
+        <div class="ph">
+          <div class="dot dp"></div>
+          <div class="ph-title">Subset Construction</div>
+          <div class="ph-tag" style="background:rgba(255,92,138,.08);color:var(--g2);">ALGORITHM</div>
+        </div>
+        <div class="tabs" id="ttabs">
+          <div class="tab on" onclick="tTab('steps', this)">Step-by-Step</div>
+          <div class="tab"    onclick="tTab('nfat',  this)">NFA Table</div>
+          <div class="tab"    onclick="tTab('dfat',  this)">DFA Table</div>
+        </div>
+
+        <div class="prog-wrap" id="prog-wrap" style="display:none; margin-top:8px;">
+          <div class="prog-fill" id="prog-fill" style="width:0%"></div>
+        </div>
+
+        <div class="tbdy on scroll" id="t-steps" style="max-height:300px;">
+          <div class="empty" id="steps-empty">
+            <div class="ei">&#x2286;</div>
+            <div class="et">RUN CONVERSION TO SEE STEPS</div>
+          </div>
+          <div id="steps-tbl" style="display:none;"></div>
+        </div>
+        <div class="tbdy scroll" id="t-nfat" style="max-height:300px;">
+          <div class="empty" id="nfat-empty">
+            <div class="ei">&delta;</div>
+            <div class="et">NFA TRANSITION TABLE</div>
+          </div>
+          <div id="nfat-tbl" style="display:none; padding:14px;"></div>
+        </div>
+        <div class="tbdy scroll" id="t-dfat" style="max-height:300px;">
+          <div class="empty" id="dfat-empty">
+            <div class="ei">&Delta;</div>
+            <div class="et">DFA TRANSITION TABLE</div>
+          </div>
+          <div id="dfat-tbl" style="display:none; padding:14px;"></div>
+        </div>
+
+        <!-- STEP CONTROLS -->
+        <div class="sc" id="sc">
+          <button class="sbtn" id="sb-prev" onclick="prevStep()" disabled>&#x2190; Prev</button>
+          <div class="si" id="s-info">Step 0 / 0</div>
+          <button class="sbtn" id="sb-next" onclick="nextStep()">Next &#x2192;</button>
+          <button class="sbtn" id="sb-play" onclick="togglePlay()">&#x25B6; Play</button>
+          <button class="sbtn" onclick="finishAll()">&#x23ED; All</button>
+          <div class="speed-grp">
+            <span>Speed</span>
+            <input type="range" id="speed" min="1" max="5" value="3" title="Playback speed">
+          </div>
+        </div>
+
+        <div class="sbar" id="sbar">
+          <span id="sbar-txt"></span>
+        </div>
+
+        <!-- EXPORT BAR -->
+        <div class="export-bar" id="export-bar">
+          <button class="xbtn" onclick="copyDFATable(this)">&#x2398; Copy DFA Table</button>
+          <button class="xbtn" onclick="exportSVG('gc-nfa','nfa')">&#x2193; NFA SVG</button>
+          <button class="xbtn" onclick="exportSVG('gc-dfa','dfa')">&#x2193; DFA SVG</button>
+        </div>
+      </div>
+      <!-- /tables panel -->
+
+    </div>
+    <!-- /right-col -->
+
+  </div>
+  <!-- /grid -->
+
+  <!-- =================== FOOTER =================== -->
+  <footer>
+    <div>NFA &#x2192; DFA CONVERTER &nbsp;&middot;&nbsp; SUBSET CONSTRUCTION ALGORITHM &nbsp;&middot;&nbsp; VANILLA JS</div>
+    <div>
+      <span>Himanshu Choudhary</span> &nbsp;&middot;&nbsp;
+      Roll: <span>2024UCS1604</span> &nbsp;&middot;&nbsp;
+      <span>Theory of Automata &amp; Formal Languages</span>
+    </div>
+  </footer>
+
+</div>
+<!-- /wrap -->
+
+<script src="script.js"></script>
+</body>
+</html>
