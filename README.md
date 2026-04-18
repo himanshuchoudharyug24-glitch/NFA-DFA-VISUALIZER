@@ -10,7 +10,7 @@
 **An interactive, visual NFA to DFA converter using the Subset Construction algorithm.**  
 Built as a course project for Theory of Automata and Formal Languages.
 
-[▶ Live Demo](#) · [📖 Report Bug](../../issues) · [✨ Request Feature](../../issues)
+[▶ Live Demo (https://himanshuchoudharyug24-glitch.github.io/NFA-DFA-VISUALIZER/)](#) · [📖 Report Bug](../../issues) · [✨ Request Feature](../../issues)
 
 </div>
 
